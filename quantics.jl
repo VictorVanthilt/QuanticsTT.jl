@@ -3,10 +3,8 @@ using TensorKit
 
 struct QuanticTT{E}
     data::Vector{Array{E, 3}}
-    N::Int
     function QuanticTT(data)
-        N = length(data)
-        return new{eltype(data[1])}(data, N)
+        return new{eltype(data[1])}(data)
     end
 end
 
@@ -14,63 +12,10 @@ function Base.getindex(q::QuanticTT, i::Int)
     return q.data[i]
 end
 
+Base.length(q::QuanticTT) = length(q.data)
+
 function Base.show(io::IO, q::QuanticTT)
-    return println(io, "QuanticTT of length ", q.N)
-end
-
-"""
-    sin_TT(ω::Float64, N::Int)
-    sin_TT(a::Float64, ω::Float64, N::Int)
-    
-    Generate an quantics TT representation of (a + ) sin(ω t) over [0, 1[ on 2^N evenly spaced gridpoints.
-"""
-function sin_TT(ω::Float64, N::Int)
-    # Left boundary: [1/(2im), -1/(2im)]
-    vl = ones(ComplexF64, 1, 2)
-    vl[1, 1] = 1 / (2im)
-    vl[1, 2] = -1 / (2im)
-
-    # Right boundary: [1, 1]ᵀ
-    vr = ones(ComplexF64, 2, 1)
-
-    tensors = map(1:N) do α # loop over sites
-        A = zeros(ComplexF64, 2, 2, 2) # left, physical, right
-        for nα in 1:2 # loop over physical index
-            A[1, nα, 1] = exp(1im * ω * 2.0^(α - 1 - N) * (nα - 1))
-            A[2, nα, 2] = exp(- 1im * ω * 2.0^(α - 1 - N) * (nα - 1))
-        end
-        return A
-    end
-
-    # Absorb boundaries
-    @tensor tensors[1][-1 -2 -3] := vl[-1 1] * tensors[1][1 -2 -3]
-    @tensor tensors[end][-1 -2 -3] := tensors[end][-1 -2 1] * vr[1 -3]
-    return QuanticTT(tensors)
-end
-function sin_TT(a::Float64, ω::Float64, N::Int)
-    # Left boundary: [1/(2im), -1/(2im), a]
-    vl = ones(ComplexF64, 1, 3)
-    vl[1, 1] = 1 / (2im)
-    vl[1, 2] = -1 / (2im)
-    vl[1, 3] = a
-
-    # Right boundary: [1, 1, 1]ᵀ
-    vr = ones(ComplexF64, 3, 1)
-
-    tensors = map(1:N) do α # loop over sites
-        A = zeros(ComplexF64, 3, 2, 3) # left, physical, right
-        for nα in 1:2 # loop over physical index
-            A[1, nα, 1] = exp(1im * ω * 2.0^(α - 1 - N) * (nα - 1))
-            A[2, nα, 2] = exp(- 1im * ω * 2.0^(α - 1 - N) * (nα - 1))
-            A[3, nα, 3] = 1.0
-        end
-        return A
-    end
-
-    # Absorb boundaries
-    @tensor tensors[1][-1 -2; -3] := vl[-1; 1] * tensors[1][1 -2; -3]
-    @tensor tensors[end][-1 -2; -3] := tensors[end][-1 -2; 1] * vr[1; -3]
-    return QuanticTT(tensors)
+    return println(io, "QuanticTT of length ", length(q))
 end
 
 """
@@ -82,8 +27,8 @@ end
 """
 function (qt::QuanticTT)(x::Float64)
     @assert 0 ≤ x ≤ 1 "x out of bounds for quantics representation"
-    integerx = floor(Int, x * 2^qt.N)
-    xstring = bitstring(integerx)[(end - qt.N + 1):end] # "0110..."
+    integerx = floor(Int, x * 2^(length(qt)))
+    xstring = bitstring(integerx)[(end - length(qt) + 1):end] # "0110..."
     xstring = [parse(Int, c) for c in xstring] .+ 1 # [1, 2, 2, 1, ...]
     xstring = reverse(xstring) # little endian
 
@@ -92,18 +37,21 @@ function (qt::QuanticTT)(x::Float64)
         cur = qt[pos][:, char, :] # impose physical index
         @tensor a[-1] := a[1] * cur[1, -1]
     end
-    return a
+    return only(a)
 end
 
+include("functions.jl")
+
 function check_accuracy(N, t)
-    omega = 1.0
-    QT = sin_TT(2.0, omega, N)
-    actualsin(x) = 2.0 + sin(omega * x)
-    return abs(QT(t) - actualsin(t))
+    QT = cos_TT(5.0, 1.0, N)
+    actualcos(x) = 5.0 + cos(1.0 * x)
+    return abs(QT(t) - actualcos(t))
 end
 
 ω = 0.1
-QT = sin_TT(1.1, ω, 40)
-actualsin(x) = 2 + sin(ω * x)
+@time QT = cos_TT(1.1, ω, 40)
 
-@time sin_TT(0.0, 0.1, 40)(0.946)
+actualcos(x) = 1.1 + cos(ω * x)
+@time QT(0.946)
+
+@time check_accuracy(40, 0.946)
