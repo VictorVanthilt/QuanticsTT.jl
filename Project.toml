@@ -1,0 +1,6 @@
+[deps]
+HCubature = "19dc6840-f33b-545b-b366-655c7e3ffd49"
+IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
+TensorKit = "07d1fe3e-3e46-537d-9eac-e9e13d0d4cec"
+TensorOperations = "6aa20fa7-93e2-5fca-9bc0-fbd0db3c71a2"
+UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
