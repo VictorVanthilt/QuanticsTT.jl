@@ -77,6 +77,59 @@ function Base.:+(qt1::QuanticTT, qt2::QuanticTT)
     return QuanticTT([lefttensor, tensors..., righttensor])
 end
 
+"""
+    integrate(qt::QuanticTT)
+
+    Returns a new quantics TT representing the indefinite integral ∫₀ᵗ f(x) dx.
+"""
+function integrate(qt::QuanticTT)
+    # TODO: figure out normalisation
+    # Make heaviside MPO
+    # Check page 58-59 of December 25' - January 26' notebook for explanation
+
+    # Merge virtual levels into a singular level
+    function merge_virtual_levels(T::Array)
+        # TODO: check if this is correct
+        χl = size(T, 1) * size(T, 2)
+        χr = size(T, 4) * size(T, 5)
+        return reshape(T, (χl, size(T, 3), χr))
+    end
+
+    # Make the integral MPO
+    # Work from right to left
+    #                  a  y  x  b
+    I = zeros(Float64, 2, 2, 2, 2) # left, down, up, right
+    # Flag already activated
+    I[2, :, :, 2] .= 1.0 # pass through if already activated
+    # Flag not yet activated
+    I[2, 2, 1, 1] = 1.0 # activate if y > x
+    I[1, 1, 1, 1] = 1.0 # stay inactive if y = x
+    I[1, 2, 2, 1] = 1.0 # stay inactive if y = x
+
+    I *= 0.5
+
+    # rightmost tensor: start with flag inactive (vr = (1, 0)ᵀ)
+    vr = zeros(Float64, 2, 1)
+    vr[1, 1] = 1.0
+
+    @tensor right[-1 -2 -3; -4 -5] := qt[end][-1 1; -4] * I[-2 -3; 1 2] * vr[2; -5]
+    right_merged = merge_virtual_levels(right)
+
+    tensors = map(reverse(eachindex(qt)[2:(end - 1)])) do i
+        @tensor cur[-1 -2 -3; -4 -5] := qt[i][-1 1; -4] * I[-2 -3; 1 -5]
+    end
+    tensors = merge_virtual_levels.(tensors)
+
+    # leftmost tensor: capture all (vl = (1, 1))
+    vl = zeros(Float64, 1, 2)
+    vl[1, 1] = 1.0
+    vl[1, 2] = 1.0
+
+    @tensor left[-1 -2 -3; -4 -5] := vl[-2 1] * I[1 -3; 1 -5] * qt[1][-1 1; -4]
+    left_merged = merge_virtual_levels(left)
+    return QuanticTT([left_merged, reverse(tensors)..., right_merged])
+end
+
 include("functions.jl")
 
 function check_accuracy(N, t)
