@@ -23,11 +23,17 @@ function Base.getindex(q::QuanticTT, i::Int)
 end
 
 Base.length(q::QuanticTT) = length(q.data)
+Base.eachindex(q::QuanticTT) = eachindex(q.data)
+Base.lastindex(q::QuanticTT) = lastindex(q.data)
 
 function Base.show(io::IO, q::QuanticTT)
-    println(io, "QuanticTT of length ", length(q))
+    println(io, "Rank $(rank(q)) QuanticTT of length $(length(q))")
     println(io, "Grid spacing: ", 1 / 2^(length(q)))
     return nothing
+end
+
+function rank(q::QuanticTT)
+    return size(q[1], 3)
 end
 
 """
@@ -76,6 +82,17 @@ function Base.:+(qt1::QuanticTT, qt2::QuanticTT)
 
     return QuanticTT([lefttensor, tensors..., righttensor])
 end
+
+Base.:+(qt::QuanticTT, a::Number) = deepcopy(qt) + constant_TT(a, length(qt))
+
+function Base.:*(a::Number, qt::QuanticTT)
+    # scale the quantics TT by a number
+    newqt = deepcopy(qt)
+    newqt[1] .= a * newqt[1]
+    return newqt
+end
+
+Base.:-(qt1::QuanticTT, qt2::QuanticTT) = qt1 + (-1) * qt2
 
 """
     integrate(qt::QuanticTT)
