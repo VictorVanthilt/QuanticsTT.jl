@@ -127,6 +127,7 @@ function integrate(qt::QuanticTT)
     I[1, 1, 1, 1] = 1.0 # stay inactive if y = x
     I[1, 2, 2, 1] = 1.0 # stay inactive if y = x
 
+    # This encorporated the dx = 1 / 2^N factor
     I *= 0.5
 
     # rightmost tensor: start with flag inactive (vr = (1, 0)ᵀ)
