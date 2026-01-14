@@ -13,6 +13,10 @@ using TensorOperations
 """
 struct QuanticTT{E}
     data::Vector{Array{E, 3}}
+    # offset::Float64
+    # TODO: add a constant field that keeps track of constant offsets
+    # a constant offset increases the rank by 1 so it is best to keep track of it separately
+    # Make sure that during integration this IS integrated a -> a * x
     function QuanticTT(data)
         return new{eltype(data[1])}(data)
     end
