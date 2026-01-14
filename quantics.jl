@@ -99,6 +99,32 @@ end
 Base.:-(qt1::QuanticTT, qt2::QuanticTT) = qt1 + (-1) * qt2
 
 """
+    (qt1::QuanticTT) * (qt2::QuanticTT)
+
+    Returns a new quantics TT representing qt1(t) * qt2(t).
+"""
+function Base.:*(qt1::QuanticTT, qt2::QuanticTT)
+    mpo = zeros(2, 2, 2) # down up1 up2
+    mpo[1, 1, 1] = 1.0
+    mpo[2, 2, 2] = 1.0
+
+    # Merge virtual levels into a singular level
+    function merge_virtual_levels(T::Array)
+        # TODO: check if this is correct
+        χl = size(T, 1) * size(T, 2)
+        χr = size(T, 4) * size(T, 5)
+        return reshape(T, (χl, size(T, 3), χr))
+    end
+
+    tensors = map(eachindex(qt1)) do i
+        @tensor cur[-1 -2 -3; -4 -5] := qt1[i][-1 1; -4] * qt2[i][-2 2; -5] * mpo[-3; 1 2]
+        return merge_virtual_levels(cur)
+    end
+
+    return QuanticTT(tensors)
+end
+
+"""
     integrate(qt::QuanticTT)
 
     Returns a new quantics TT representing the indefinite integral ∫₀ᵗ f(x) dx.
@@ -150,6 +176,25 @@ function integrate(qt::QuanticTT)
     @tensor left[-1 -2 -3; -4 -5] := vl[-2 1] * I[1 -3; 1 -5] * qt[1][-1 1; -4]
     left_merged = merge_virtual_levels(left)
     return QuanticTT([left_merged, reverse(tensors)..., right_merged])
+end
+
+"""
+    time_ordered_part(qt1::QuanticTT, qt2::QuanticTT, t0::Float64)
+
+    Returns a new quantics TT representing the time ordered part
+    qt1(t)*∫_{t0}^t qt2(x) dx
+"""
+function time_ordered_part(qt1::QuanticTT, qt2::QuanticTT, t0::Float64)
+    Iq2 = integrate(qt2)
+    return qt1 * Iq2 + (-Iq2(t0))
+end
+
+function time_ordered_integral_TT(vqt::Vector, t0::Float64)
+    I = time_ordered_part(vqt[2], vqt[1], t0)
+    for qt in vqt[3:end]
+        I = time_ordered_part(qt, I, t0)
+    end
+    return integrate(I)
 end
 
 include("functions.jl")
