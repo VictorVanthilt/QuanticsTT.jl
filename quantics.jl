@@ -186,15 +186,53 @@ end
 """
 function time_ordered_part(qt1::QuanticTT, qt2::QuanticTT, t0::Float64)
     Iq2 = integrate(qt2)
-    return qt1 * Iq2 + (-Iq2(t0))
+    return qt1 * (Iq2 + (-1 * Iq2(t0)))
 end
 
+"""
+    time_ordered_integral_TT(vqt::Vector{QuanticTT}, t0::Float64)
+
+    Returns a quantics TT representing the time ordered integral
+"""
 function time_ordered_integral_TT(vqt::Vector, t0::Float64)
     I = time_ordered_part(vqt[2], vqt[1], t0)
     for qt in vqt[3:end]
         I = time_ordered_part(qt, I, t0)
     end
     return integrate(I)
+end
+
+"""
+    fxf(qt1::QuanticTT, qt2::QuanticTT)
+
+    Returns the integral ∫₀¹ qt1(x) * qt2(x) dx using the quantics TT representations.
+
+    lol the inner product is an integral of the domain of the product of the two functions
+"""
+function fxf(qt1::QuanticTT, qt2::QuanticTT)
+    @assert length(qt1) == length(qt2) "Quantics TT lengths must match for fxf operation"
+    @tensor start[-1 -2; -3 -4] := qt1[1][-1 1; -3] * qt2[1][-2 1; -4]
+    start *= 0.5
+    for i in 2:length(qt1)
+        @tensor start[-1 -2; -3 -4] := start[-1 -2; 1 2] * qt1[i][1 3; -3] * qt2[i][2 3; -4]
+        start *= 0.5
+    end
+
+    return start
+end
+
+function compress(qt::QuanticTT; tol::Float64 = eps(Float64))
+    tensors = deepcopy(qt.data)
+    for i in eachindex(tensors)[1:(end - 1)]
+        @tensor A[-1 -2 -3; -4] := tensors[i][-1 -2; 1] * tensors[i + 1][1 -3; -4]
+        U, S, V, _ = svd_trunc(reshape(A, (size(A, 1) * size(A, 2), size(A, 3) * size(A, 4))); trunc = trunctol(rtol = tol))
+        U = reshape(U, (size(tensors[i], 1), 2, size(U, 2)))
+        V = reshape(V, (size(V, 1), 2, size(tensors[i + 1], 3)))
+        @tensor U[-1 -2; -3] := U[-1 -2; 1] * S[1; -3]
+        tensors[i] = U
+        tensors[i + 1] = V
+    end
+    return QuanticTT(tensors)
 end
 
 include("functions.jl")
