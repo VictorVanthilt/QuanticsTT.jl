@@ -1,6 +1,16 @@
 # small interface for time ordered integrals using quantics
-using TensorKit
+using TensorOperations
 
+"""
+    Struct QuanticTT{E}
+
+    # Fields
+    data::Vector{Array{E, 3}}
+
+    A quantics tensor train (TT) representation of a function over [0, 1[ on 2^N evenly spaced gridpoints.
+    data[1] corresponds to the least significant bit 2^0.
+    data[end] corresponds to the most significant bit 2^(N-1).
+"""
 struct QuanticTT{E}
     data::Vector{Array{E, 3}}
     function QuanticTT(data)
@@ -15,7 +25,9 @@ end
 Base.length(q::QuanticTT) = length(q.data)
 
 function Base.show(io::IO, q::QuanticTT)
-    return println(io, "QuanticTT of length ", length(q))
+    println(io, "QuanticTT of length ", length(q))
+    println(io, "Grid spacing: ", 1 / 2^(length(q)))
+    return nothing
 end
 
 """
