@@ -52,6 +52,31 @@ function (qt::QuanticTT)(x::Float64)
     return only(a)
 end
 
+function Base.:+(qt1::QuanticTT, qt2::QuanticTT)
+    # perform the direct sum of the two TTs
+
+    @assert length(qt1) == length(qt2) "lengths of quantics TT must match for addition"
+    r1 = rank(qt1)
+    nrank = r1 + rank(qt2)
+
+    tensors = map(eachindex(qt1)[2:(end - 1)]) do i
+        A = zeros(ComplexF64, nrank, 2, nrank)
+        A[1:r1, :, 1:r1] = qt1[i][:, :, :]
+        A[(r1 + 1):end, :, (r1 + 1):end] = qt2[i][:, :, :]
+        return A
+    end
+
+    lefttensor = zeros(ComplexF64, 1, 2, nrank)
+    lefttensor[1, :, 1:r1] = qt1[1][:, :, :]
+    lefttensor[1, :, (r1 + 1):end] = qt2[1][:, :, :]
+
+    righttensor = zeros(ComplexF64, nrank, 2, 1)
+    righttensor[1:r1, :, 1] = qt1[end][:, :, :]
+    righttensor[(r1 + 1):end, :, 1] = qt2[end][:, :, :]
+
+    return QuanticTT([lefttensor, tensors..., righttensor])
+end
+
 include("functions.jl")
 
 function check_accuracy(N, t)
