@@ -204,7 +204,7 @@ function time_ordered_integral_TT(vqt::Vector)
         I = time_ordered_part(qt, I)
     end
     finalQT = integrate(I)
-    return finalQT
+    return finalQT(1.0 - eps(1.0))
 end
 
 """
