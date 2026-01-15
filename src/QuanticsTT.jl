@@ -3,7 +3,7 @@ module QuanticsTT
 using TensorOperations
 # using MatrixAlgebraKit
 include("functions.jl")
-export QuanticTT, time_ordered_integral_TT, sin_TT, cos_TT, constant_TT
+export QuanticTT, time_ordered_integral_TT, sin_TT, cos_TT, constant_TT, to_TT
 
 """
     Struct QuanticTT{E}
@@ -224,6 +224,16 @@ function fxf(qt1::QuanticTT, qt2::QuanticTT)
     end
 
     return start
+end
+
+function to_TT(s::String, omega::Float64, a::Float64, b::Float64, N::Int)
+    if s == "sin"
+        return sin_TT((b - a) * omega, N; x0 = (-omega * a))
+    elseif s == "cos"
+        return cos_TT(a, (b - a) * omega, N; x0 = (-omega * a))
+    else
+        error("Function $s not recognized")
+    end
 end
 
 # """
