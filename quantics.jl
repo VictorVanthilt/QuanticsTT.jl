@@ -1,5 +1,9 @@
 # small interface for time ordered integrals using quantics
+module Quantics
 using TensorOperations
+# using MatrixAlgebraKit
+include("functions.jl")
+export QuanticTT, time_ordered_integral_TT, sin_TT, cos_TT, constant_TT
 
 """
     Struct QuanticTT{E}
@@ -222,32 +226,23 @@ function fxf(qt1::QuanticTT, qt2::QuanticTT)
     return start
 end
 
-function compress(qt::QuanticTT; tol::Float64 = eps(Float64))
-    tensors = deepcopy(qt.data)
-    for i in eachindex(tensors)[1:(end - 1)]
-        @tensor A[-1 -2 -3; -4] := tensors[i][-1 -2; 1] * tensors[i + 1][1 -3; -4]
-        U, S, V, _ = svd_trunc(reshape(A, (size(A, 1) * size(A, 2), size(A, 3) * size(A, 4))); trunc = trunctol(rtol = tol))
-        U = reshape(U, (size(tensors[i], 1), 2, size(U, 2)))
-        V = reshape(V, (size(V, 1), 2, size(tensors[i + 1], 3)))
-        @tensor U[-1 -2; -3] := U[-1 -2; 1] * S[1; -3]
-        tensors[i] = U
-        tensors[i + 1] = V
-    end
-    return QuanticTT(tensors)
+# """
+#     compress(qt::QuanticTT; tol::Float64 = eps(Float64))
+
+#     Compress the quantics TT using a specified tolerance using SVD truncation.
+# """
+# function compress(qt::QuanticTT; tol::Float64 = eps(Float64))
+#     tensors = deepcopy(qt.data)
+#     for i in eachindex(tensors)[1:(end - 1)]
+#         @tensor A[-1 -2 -3; -4] := tensors[i][-1 -2; 1] * tensors[i + 1][1 -3; -4]
+#         U, S, V, _ = svd_trunc(reshape(A, (size(A, 1) * size(A, 2), size(A, 3) * size(A, 4))); trunc = trunctol(rtol = tol))
+#         U = reshape(U, (size(tensors[i], 1), 2, size(U, 2)))
+#         V = reshape(V, (size(V, 1), 2, size(tensors[i + 1], 3)))
+#         @tensor U[-1 -2; -3] := U[-1 -2; 1] * S[1; -3]
+#         tensors[i] = U
+#         tensors[i + 1] = V
+#     end
+#     return QuanticTT(tensors)
+# end
+
 end
-
-include("functions.jl")
-
-function check_accuracy(N, t)
-    QT = cos_TT(5.0, 1.0, N)
-    actualcos(x) = 5.0 + cos(1.0 * x)
-    return abs(QT(t) - actualcos(t))
-end
-
-ω = 0.1
-@time QT = cos_TT(1.1, ω, 40)
-
-actualcos(x) = 1.1 + cos(ω * x)
-@time QT(0.946)
-
-@time check_accuracy(40, 0.946)
