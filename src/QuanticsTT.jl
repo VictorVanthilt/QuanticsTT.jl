@@ -183,28 +183,28 @@ function integrate(qt::QuanticTT)
 end
 
 """
-    time_ordered_part(qt1::QuanticTT, qt2::QuanticTT, t0::Float64)
+    time_ordered_part(qt1::QuanticTT, qt2::QuanticTT)
 
     Returns a new quantics TT representing the time ordered part
-    qt1(t)*∫_{t0}^t qt2(x) dx
+    qt1(t)*∫_{0}^t qt2(x) dx
 """
-function time_ordered_part(qt1::QuanticTT, qt2::QuanticTT, t0::Float64)
+function time_ordered_part(qt1::QuanticTT, qt2::QuanticTT)
     Iq2 = integrate(qt2)
-    return qt1 * (Iq2 + (-1 * Iq2(t0)))
+    return qt1 * Iq2
 end
 
 """
-    time_ordered_integral_TT(vqt::Vector{QuanticTT}, t0::Float64)
+    time_ordered_integral_TT(vqt::Vector{QuanticTT})
 
     Returns a quantics TT representing the time ordered integral
 """
-function time_ordered_integral_TT(vqt::Vector, t0::Float64)
-    I = time_ordered_part(vqt[2], vqt[1], t0)
+function time_ordered_integral_TT(vqt::Vector)
+    I = time_ordered_part(vqt[2], vqt[1])
     for qt in vqt[3:end]
-        I = time_ordered_part(qt, I, t0)
+        I = time_ordered_part(qt, I)
     end
     finalQT = integrate(I)
-    return finalQT + (-1 * finalQT(t0))
+    return finalQT
 end
 
 """
