@@ -1,5 +1,5 @@
 # small interface for time ordered integrals using quantics
-module Quantics
+module QuanticsTT
 using TensorOperations
 # using MatrixAlgebraKit
 include("functions.jl")
