@@ -138,8 +138,8 @@ end
 
     Generate an quantics TT representation of the constant function f(t) = a over [0, 1[ on 2^N evenly spaced gridpoints.
 """
-function constant_TT(a::Number, N::Int)
-    tensors = [ones(1, 2, 1) for _ in 1:N]
+function constant_TT(a::E, N::Int) where {E <: Number}
+    tensors = [ones(E, 1, 2, 1) for _ in 1:N]
     tensors[1] *= a
     return QuanticTT(tensors)
 end
