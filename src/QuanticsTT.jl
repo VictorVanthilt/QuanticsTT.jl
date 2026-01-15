@@ -199,6 +199,10 @@ end
     Returns a quantics TT representing the time ordered integral
 """
 function time_ordered_integral_TT(vqt::Vector)
+    if length(vqt) == 1
+        return integrate(vqt[1])(1.0 - eps(1.0))
+    end
+
     I = time_ordered_part(vqt[2], vqt[1])
     for qt in vqt[3:end]
         I = time_ordered_part(qt, I)
