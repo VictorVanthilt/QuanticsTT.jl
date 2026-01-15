@@ -199,7 +199,8 @@ function time_ordered_integral_TT(vqt::Vector, t0::Float64)
     for qt in vqt[3:end]
         I = time_ordered_part(qt, I, t0)
     end
-    return integrate(I)
+    finalQT = integrate(I)
+    return finalQT + (-1 * finalQT(t0))
 end
 
 """
