@@ -3,7 +3,7 @@ module QuanticsTT
 using TensorOperations
 # using MatrixAlgebraKit
 include("functions.jl")
-export QuanticTT, time_ordered_integral_TT, sin_TT, cos_TT, constant_TT, to_TT
+export QuanticTT, integrate, time_ordered_integral_TT, sin_TT, cos_TT, constant_TT, to_TT
 
 """
     Struct QuanticTT{E}
@@ -58,7 +58,7 @@ function (qt::QuanticTT)(x::Float64)
     xstring = [parse(Int, c) for c in xstring] .+ 1 # [1, 2, 2, 1, ...]
     xstring = reverse(xstring) # little endian
 
-    a = ones(1)
+    a = [1.0]
     for (pos, char) in enumerate(xstring)
         cur = qt[pos][:, char, :] # impose physical index
         @tensor a[-1] := a[1] * cur[1, -1]
@@ -167,18 +167,17 @@ function integrate(qt::QuanticTT)
     @tensor right[-1 -2 -3; -4 -5] := qt[end][-1 1; -4] * I[-2 -3; 1 2] * vr[2; -5]
     right_merged = merge_virtual_levels(right)
 
+    # TODO: multithread
     tensors = map(reverse(eachindex(qt)[2:(end - 1)])) do i
-        @tensor cur[-1 -2 -3; -4 -5] := qt[i][-1 1; -4] * I[-2 -3; 1 -5]
+        merge_virtual_levels(@tensor cur[-1 -2 -3; -4 -5] := qt[i][-1 1; -4] * I[-2 -3; 1 -5])
     end
-    tensors = merge_virtual_levels.(tensors)
 
     # leftmost tensor: capture all (vl = (1, 1))
     vl = zeros(Float64, 1, 2)
     vl[1, 1] = 1.0
     vl[1, 2] = 1.0
 
-    @tensor left[-1 -2 -3; -4 -5] := vl[-2 1] * I[1 -3; 1 -5] * qt[1][-1 1; -4]
-    left_merged = merge_virtual_levels(left)
+    left_merged = merge_virtual_levels(@tensor left[-1 -2 -3; -4 -5] := vl[-2 1] * I[1 -3; 1 -5] * qt[1][-1 1; -4])
     return QuanticTT([left_merged, reverse(tensors)..., right_merged])
 end
 
@@ -189,8 +188,7 @@ end
     qt1(t)*∫_{0}^t qt2(x) dx
 """
 function time_ordered_part(qt1::QuanticTT, qt2::QuanticTT)
-    Iq2 = integrate(qt2)
-    return qt1 * Iq2
+    return qt1 * integrate(qt2)
 end
 
 """
@@ -199,8 +197,9 @@ end
     Returns a quantics TT representing the time ordered integral
 """
 function time_ordered_integral_TT(vqt::Vector)
+    @assert allequal(length.(vqt)) "All QuanticTTs must have the same length"
     if length(vqt) == 1
-        return integrate(only(vqt))(1.0 - eps(1.0))
+        return integrate(only(vqt))(1.0 - 2.0^(-length(vqt)))
     end
 
     I = time_ordered_part(vqt[end - 1], vqt[end])
@@ -208,7 +207,7 @@ function time_ordered_integral_TT(vqt::Vector)
         I = time_ordered_part(qt, I)
     end
     finalQT = integrate(I)
-    return finalQT(1.0 - eps(1.0))
+    return finalQT(1.0 - 2.0^(-length(vqt)))
 end
 
 """
@@ -216,7 +215,7 @@ end
 
     Returns the integral ∫₀¹ qt1(x) * qt2(x) dx using the quantics TT representations.
 
-    lol the inner product is an integral of the domain of the product of the two functions
+    lol the inner product is an integral over the domain of the product of the two functions
 """
 function fxf(qt1::QuanticTT, qt2::QuanticTT)
     @assert length(qt1) == length(qt2) "Quantics TT lengths must match for fxf operation"
