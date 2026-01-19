@@ -15,10 +15,10 @@ function sin_TT(ω::Float64, N::Int; x0::Float64 = 0.0)
 
     tensors = map(1:N) do α # loop over sites
         A = zeros(ComplexF64, 2, 2, 2) # left, physical, right
-        for nα in 1:2 # loop over physical index
-            A[1, nα, 1] = exp(1im * ω * 2.0^(α - 1 - N) * ((nα - 1)))
-            A[2, nα, 2] = exp(- 1im * ω * 2.0^(α - 1 - N) * ((nα - 1)))
-        end
+        A[1, 1, 1] = 1.0 # nα = 0
+        A[2, 1, 2] = 1.0
+        A[1, 2, 1] = exp(1im * ω * 2.0^(α - 1 - N))
+        A[2, 2, 2] = exp(-1im * ω * 2.0^(α - 1 - N))
         return A
     end
 
@@ -39,11 +39,11 @@ function sin_TT(a::Float64, ω::Float64, N::Int; x0::Float64 = 0.0)
 
     tensors = map(1:N) do α # loop over sites
         A = zeros(ComplexF64, 3, 2, 3) # left, physical, right
-        for nα in 1:2 # loop over physical index
-            A[1, nα, 1] = exp(1im * ω * 2.0^(α - 1 - N) * ((nα - 1)))
-            A[2, nα, 2] = exp(- 1im * ω * 2.0^(α - 1 - N) * ((nα - 1)))
-            A[3, nα, 3] = 1.0
-        end
+        A[1, 1, 1] = 1.0 # nα = 0
+        A[2, 1, 2] = 1.0
+        A[1, 2, 1] = exp(1im * ω * 2.0^(α - 1 - N))
+        A[2, 2, 2] = exp(-1im * ω * 2.0^(α - 1 - N))
+        A[3, :, 3] .= 1.0
         return A
     end
 
@@ -70,10 +70,10 @@ function cos_TT(ω::Float64, N::Int; x0::Float64 = 0.0)
 
     tensors = map(1:N) do α # loop over sites
         A = zeros(ComplexF64, 2, 2, 2) # left, physical, right
-        for nα in 1:2 # loop over physical index
-            A[1, nα, 1] = exp(1im * ω * 2.0^(α - 1 - N) * (nα - 1))
-            A[2, nα, 2] = exp(-1im * ω * 2.0^(α - 1 - N) * (nα - 1))
-        end
+        A[1, 1, 1] = 1.0 # nα = 0
+        A[2, 1, 2] = 1.0
+        A[1, 2, 1] = exp(1im * ω * 2.0^(α - 1 - N))
+        A[2, 2, 2] = exp(-1im * ω * 2.0^(α - 1 - N))
         return A
     end
 
@@ -94,11 +94,11 @@ function cos_TT(a::Float64, ω::Float64, N::Int; x0::Float64 = 0.0)
 
     tensors = map(1:N) do α # loop over sites
         A = zeros(ComplexF64, 3, 2, 3) # left, physical, right
-        for nα in 1:2 # loop over physical index
-            A[1, nα, 1] = exp(1im * ω * 2.0^(α - 1 - N) * (nα - 1))
-            A[2, nα, 2] = exp(-1im * ω * 2.0^(α - 1 - N) * (nα - 1))
-            A[3, nα, 3] = 1.0
-        end
+        A[1, 1, 1] = 1.0 # nα = 0
+        A[2, 1, 2] = 1.0
+        A[1, 2, 1] = exp(1im * ω * 2.0^(α - 1 - N))
+        A[2, 2, 2] = exp(-1im * ω * 2.0^(α - 1 - N))
+        A[3, :, 3] .= 1.0
         return A
     end
 
