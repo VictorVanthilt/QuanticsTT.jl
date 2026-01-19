@@ -67,8 +67,7 @@ x_vals = collect(0.01:0.001:0.999)
         end
     end
 
-    # Test 5: Rescaling
-
+    # Test 6: Rescaling
     @testset "sin_TT with rescaling" begin
         a = 2.1
         b = 3.7
@@ -145,7 +144,7 @@ end
         end
     end
 
-    # Test 7: cos_TT vs sin_TT relationship
+    # Test 6: cos_TT vs sin_TT relationship
     @testset "cos_TT vs sin_TT phase relationship" begin
         ω = 1 / 3 * π
         tt_sin_phase = sin_TT(ω, N; x0 = -π / (2ω))
