@@ -1,9 +1,8 @@
 # small interface for time ordered integrals using quantics
 module QuanticsTT
 using TensorOperations
-# using MatrixAlgebraKit
 include("functions.jl")
-export QuanticTT, integrate, time_ordered_integral_TT, sin_TT, cos_TT, constant_TT, to_TT
+export QuanticTT, integrate, time_ordered_integral_TT, sin_TT, cos_TT, constant_TT
 
 """
     Struct QuanticTT{E}
@@ -238,24 +237,4 @@ function to_TT(s::String, omega::Float64, a::Float64, b::Float64, N::Int)
         error("Function $s not recognized")
     end
 end
-
-# """
-#     compress(qt::QuanticTT; tol::Float64 = eps(Float64))
-
-#     Compress the quantics TT using a specified tolerance using SVD truncation.
-# """
-# function compress(qt::QuanticTT; tol::Float64 = eps(Float64))
-#     tensors = deepcopy(qt.data)
-#     for i in eachindex(tensors)[1:(end - 1)]
-#         @tensor A[-1 -2 -3; -4] := tensors[i][-1 -2; 1] * tensors[i + 1][1 -3; -4]
-#         U, S, V, _ = svd_trunc(reshape(A, (size(A, 1) * size(A, 2), size(A, 3) * size(A, 4))); trunc = trunctol(rtol = tol))
-#         U = reshape(U, (size(tensors[i], 1), 2, size(U, 2)))
-#         V = reshape(V, (size(V, 1), 2, size(tensors[i + 1], 3)))
-#         @tensor U[-1 -2; -3] := U[-1 -2; 1] * S[1; -3]
-#         tensors[i] = U
-#         tensors[i + 1] = V
-#     end
-#     return QuanticTT(tensors)
-# end
-
 end
