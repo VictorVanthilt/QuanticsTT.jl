@@ -51,7 +51,7 @@ end
     and uses that to contract the quantics TT.
 """
 function (qt::QuanticTT)(x::Float64)
-    @assert 0 ≤ x < 1 "x out of bounds for quantics representation"
+    @assert 0.0 ≤ x < 1.0 - 2.0^-length(qt) "x out of bounds for quantics representation"
     integerx = floor(Int, x * 2^(length(qt)))
     xstring = bitstring(integerx)[(end - length(qt) + 1):end] # "0110..."
     xstring = [parse(Int, c) for c in xstring] .+ 1 # [1, 2, 2, 1, ...]
