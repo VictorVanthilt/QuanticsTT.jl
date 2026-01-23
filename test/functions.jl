@@ -208,7 +208,6 @@ end
 
     # Test 5: Very small constant
     @testset "constant_TT small value" begin
-        N = 8
         a = 1.0e-5
         tt_small = constant_TT(a, N)
 
@@ -221,7 +220,6 @@ end
 
     # Test 6: Large constant
     @testset "constant_TT large value" begin
-        N = 8
         a = 1.0e5
         tt_large = constant_TT(a, N)
 
@@ -234,7 +232,6 @@ end
 
     # Test 7: Complex constants
     @testset "constant_TT complex value" begin
-        N = 8
         a = 2.0 + 3.0im
         tt_complex = constant_TT(a, N)
 
@@ -249,7 +246,6 @@ end
 @testset "Cross-function tests" begin
     # Test 1: sin + constant should equal sin_TT with offset
     @testset "sin_TT additive property" begin
-        N = 6
         ω = 2π
         a = 2.0
 
@@ -267,7 +263,6 @@ end
 
     # Test 2: cos + constant should equal cos_TT with offset
     @testset "cos_TT additive property" begin
-        N = 6
         ω = 1.0 * π
         a = 1.5
 
