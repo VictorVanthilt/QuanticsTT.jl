@@ -51,7 +51,7 @@ end
     and uses that to contract the quantics TT.
 """
 function (qt::QuanticTT)(x::Float64)
-    @assert 0.0 ≤ x < 1.0 - 2.0^-length(qt) "x out of bounds for quantics representation"
+    @assert 0.0 ≤ x < 1.0 "x out of bounds for quantics representation"
     integerx = floor(Int, x * 2^(length(qt)))
     xstring = bitstring(integerx)[(end - length(qt) + 1):end] # "0110..."
     xstring = [parse(Int, c) for c in xstring] .+ 1 # [1, 2, 2, 1, ...]
@@ -198,7 +198,7 @@ end
 function time_ordered_integral_TT(vqt::Vector)
     @assert allequal(length.(vqt)) "All QuanticTTs must have the same length"
     if length(vqt) == 1
-        return integrate(only(vqt))(1.0 - 2.0^(-length(vqt)))
+        return integrate(only(vqt))(1.0 - eps(Float64))
     end
 
     I = time_ordered_part(vqt[end - 1], vqt[end])
@@ -206,7 +206,7 @@ function time_ordered_integral_TT(vqt::Vector)
         I = time_ordered_part(qt, I)
     end
     finalQT = integrate(I)
-    return finalQT(1.0 - 2.0^(-length(vqt)))
+    return finalQT(1.0 - eps(Float64))
 end
 
 """
