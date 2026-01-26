@@ -51,6 +51,15 @@ using QuadGK
         end
     end
 
+    @testset "time ordered integral is just integral for length 1" begin
+        for N in [20, 30, 40, 50, 60]
+            qt = sin_TT(1.0, N)
+            val_tt = time_ordered_integral_TT([qt])
+            val_quad = quadgk(t -> sin(t), 0.0, 1.0)[1]
+            @test isapprox(val_tt, val_quad; rtol = 1.0e-5)
+        end
+    end
+
     @testset "time ordered integral length 2" begin
         # 0 -> 1
         for N in [20, 30, 40, 50, 60]
@@ -71,6 +80,14 @@ using QuadGK
             val_tt = time_ordered_integral_TT([qt1, qt2])
             val_quad = quadgk(t -> sin(t) * quadgk(s -> cos(s), t0, t)[1], t0, t1)[1]
             @test isapprox(val_tt, val_quad; rtol = 1.0e-5)
+        end
+    end
+
+    @testset "time ordered integral larger length" begin
+        N = 20
+        qtc = constant_TT(1.0, N)
+        for l in 1:10
+            @test isapprox(time_ordered_integral_TT(fill(qtc, l)), 1 / factorial(l), atol = 1.0e-12)
         end
     end
 end
