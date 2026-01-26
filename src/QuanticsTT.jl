@@ -198,15 +198,13 @@ end
 function time_ordered_integral_TT(vqt::Vector)
     @assert allequal(length.(vqt)) "All QuanticTTs must have the same length"
     if length(vqt) == 1
-        return integrate(only(vqt))(1.0 - eps(Float64))
+        return fxf(constant_TT(1.0, length(only(vqt))), only(vqt))
     end
-
-    I = time_ordered_part(vqt[end - 1], vqt[end])
-    for qt in reverse(vqt[1:(end - 2)])
-        I = time_ordered_part(qt, I)
+    f = last(vqt)
+    for qt in reverse(vqt[2:(end - 1)])
+        f = time_ordered_part(qt, f)
     end
-    finalQT = integrate(I)
-    return finalQT(1.0 - eps(Float64))
+    return fxf(first(vqt), integrate(f))
 end
 
 """
