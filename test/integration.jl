@@ -1,7 +1,7 @@
 using QuanticsTT
 using QuadGK
 
-@testset "integrate function vs QuadGK" begin
+@testset "Integration vs QuadGK" begin
     N = 55
     t_vals = 0.01:0.02:0.99
 
@@ -48,6 +48,29 @@ using QuadGK
             val_tt = iq(t)
             val_quad = quadgk(x -> a + sin(ω * (x - x0)), 0.0, t)[1]
             @test isapprox(val_tt, val_quad; rtol = 1.0e-10)
+        end
+    end
+
+    @testset "time ordered integral length 2" begin
+        # 0 -> 1
+        for N in [20, 30, 40, 50, 60]
+            qt1 = sin_TT(1.0, N)
+            qt2 = cos_TT(1.0, N)
+            val_tt = time_ordered_integral_TT([qt1, qt2])
+            val_quad = quadgk(t -> sin(t) * quadgk(s -> cos(s), 0.0, t)[1], 0.0, 1.0)[1]
+            @test isapprox(val_tt, val_quad; rtol = 1.0e-5)
+        end
+
+        # 0.1 -> 0.9
+        for N in [20, 30, 40, 50, 60]
+            t0 = 0.1
+            t1 = 0.9
+            dt = t1 - t0
+            qt1 = dt * sin_TT(dt, N, x0 = -t0 / dt)
+            qt2 = dt * cos_TT(dt, N, x0 = -t0 / dt)
+            val_tt = time_ordered_integral_TT([qt1, qt2])
+            val_quad = quadgk(t -> sin(t) * quadgk(s -> cos(s), t0, t)[1], t0, t1)[1]
+            @test isapprox(val_tt, val_quad; rtol = 1.0e-5)
         end
     end
 end
