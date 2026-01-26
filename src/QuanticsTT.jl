@@ -213,8 +213,6 @@ end
     fxf(qt1::QuanticTT, qt2::QuanticTT)
 
     Returns the integral ∫₀¹ qt1(x) * qt2(x) dx using the quantics TT representations.
-
-    lol the inner product is an integral over the domain of the product of the two functions
 """
 function fxf(qt1::QuanticTT, qt2::QuanticTT)
     @assert length(qt1) == length(qt2) "Quantics TT lengths must match for fxf operation"
@@ -225,7 +223,7 @@ function fxf(qt1::QuanticTT, qt2::QuanticTT)
         start *= 0.5
     end
 
-    return start
+    return only(start)
 end
 
 function to_TT(s::String, omega::Float64, a::Float64, b::Float64, N::Int)
