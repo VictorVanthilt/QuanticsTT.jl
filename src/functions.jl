@@ -66,3 +66,6 @@ function constant_TT(a::E, N::Int) where {E <: Number}
     tensors[1] *= a
     return QuanticTT(tensors)
 end
+
+# TODO: polynomials
+# TODO: add default N = 55 (spacing < 1e-16)
