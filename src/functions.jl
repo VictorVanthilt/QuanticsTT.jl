@@ -1,10 +1,9 @@
 """
-    sin_TT(ω::Float64, N::Int; x0::Float64 = 0.0)
-    sin_TT(a::Float64, ω::Float64, N::Int, x0::Float64 = 0.0)
+    sin_TT(N::Int; ω::Float64=1.0, x0::Float64 = 0.0)
     
-    Generate an quantics TT representation of (a + ) sin(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
+    Generate an quantics TT representation of sin(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
 """
-function sin_TT(ω::Float64, N::Int; x0::Float64 = 0.0)
+function sin_TT(N::Int; ω::Float64 = 1.0, x0::Float64 = 0.0)
     # Left boundary: [1/(2im) * exp[-iωx0], -1/(2im) * exp[iωx0]]
     vl = ones(ComplexF64, 1, 2)
     vl[1, 1] = (1 / 2im) * exp(-1im * ω * x0)
@@ -27,39 +26,13 @@ function sin_TT(ω::Float64, N::Int; x0::Float64 = 0.0)
     @tensor tensors[end][-1 -2 -3] := tensors[end][-1 -2 1] * vr[1 -3]
     return QuanticTT(tensors)
 end
-function sin_TT(a::Float64, ω::Float64, N::Int; x0::Float64 = 0.0)
-    # Left boundary: [1/(2im) * exp(-iωx0), -1/(2im)* exp(iωx0), a]
-    vl = ones(ComplexF64, 1, 3)
-    vl[1, 1] = (1 / 2im) * exp(-1im * ω * x0)
-    vl[1, 2] = (-1 / 2im) * exp(1im * ω * x0)
-    vl[1, 3] = a
-
-    # Right boundary: [1, 1, 1]ᵀ
-    vr = ones(ComplexF64, 3, 1)
-
-    tensors = map(1:N) do α # loop over sites
-        A = zeros(ComplexF64, 3, 2, 3) # left, physical, right
-        A[1, 1, 1] = 1.0 # nα = 0
-        A[2, 1, 2] = 1.0
-        A[1, 2, 1] = exp(1im * ω * 2.0^(α - 1 - N))
-        A[2, 2, 2] = exp(-1im * ω * 2.0^(α - 1 - N))
-        A[3, :, 3] .= 1.0
-        return A
-    end
-
-    # Absorb boundaries
-    @tensor tensors[1][-1 -2; -3] := vl[-1; 1] * tensors[1][1 -2; -3]
-    @tensor tensors[end][-1 -2; -3] := tensors[end][-1 -2; 1] * vr[1; -3]
-    return QuanticTT(tensors)
-end
 
 """
-    cos_TT(ω::Float64, N::Int; x0::Float64 = 0.0)
-    cos_TT(a::Float64, ω::Float64, N::Int; x0::Float64 = 0.0)
+    cos_TT(N::Int; ω::Float64=1.0, x0::Float64 = 0.0)
 
     Generate an quantics TT representation of (a + ) cos(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
 """
-function cos_TT(ω::Float64, N::Int; x0::Float64 = 0.0)
+function cos_TT(N::Int; ω::Float64 = 1.0, x0::Float64 = 0.0)
     # Left boundary: [1/2 * exp(-iωx0), 1/2 * exp(iωx0)]
     vl = ones(ComplexF64, 1, 2)
     vl[1, 1] = (1 / 2) * exp(-1im * ω * x0)
@@ -80,31 +53,6 @@ function cos_TT(ω::Float64, N::Int; x0::Float64 = 0.0)
     # Absorb boundaries
     @tensor tensors[1][-1 -2 -3] := vl[-1 1] * tensors[1][1 -2 -3]
     @tensor tensors[end][-1 -2 -3] := tensors[end][-1 -2 1] * vr[1 -3]
-    return QuanticTT(tensors)
-end
-function cos_TT(a::Float64, ω::Float64, N::Int; x0::Float64 = 0.0)
-    # Left boundary: [1/2im * exp(-iωx0), 1/2im * exp(iωx0), a]
-    vl = ones(ComplexF64, 1, 3)
-    vl[1, 1] = (1 / 2) * exp(-1im * ω * x0)
-    vl[1, 2] = (1 / 2) * exp(1im * ω * x0)
-    vl[1, 3] = a
-
-    # Right boundary: [1, 1, 1]ᵀ
-    vr = ones(ComplexF64, 3, 1)
-
-    tensors = map(1:N) do α # loop over sites
-        A = zeros(ComplexF64, 3, 2, 3) # left, physical, right
-        A[1, 1, 1] = 1.0 # nα = 0
-        A[2, 1, 2] = 1.0
-        A[1, 2, 1] = exp(1im * ω * 2.0^(α - 1 - N))
-        A[2, 2, 2] = exp(-1im * ω * 2.0^(α - 1 - N))
-        A[3, :, 3] .= 1.0
-        return A
-    end
-
-    # Absorb boundaries
-    @tensor tensors[1][-1 -2; -3] := vl[-1; 1] * tensors[1][1 -2; -3]
-    @tensor tensors[end][-1 -2; -3] := tensors[end][-1 -2; 1] * vr[1; -3]
     return QuanticTT(tensors)
 end
 
