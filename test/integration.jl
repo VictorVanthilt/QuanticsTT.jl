@@ -18,7 +18,7 @@ using QuadGK
 
     @testset "sin integrate" begin
         ω = 2π
-        qt = sin_TT(ω, N)
+        qt = sin_TT(N; ω = ω)
         iq = integrate(qt)
         for t in t_vals
             val_tt = iq(t)
@@ -29,7 +29,7 @@ using QuadGK
 
     @testset "cos integrate" begin
         ω = 2π
-        qt = cos_TT(ω, N)
+        qt = cos_TT(N; ω = ω)
         iq = integrate(qt)
         for t in t_vals
             val_tt = iq(t)
@@ -42,7 +42,7 @@ using QuadGK
         a = 1.25
         ω = 3.0
         x0 = 0.12
-        qt = sin_TT(a, ω, N; x0 = x0)
+        qt = sin_TT(N; ω = ω, x0 = x0) + constant_TT(a, N)
         iq = integrate(qt)
         for t in t_vals
             val_tt = iq(t)
@@ -53,7 +53,7 @@ using QuadGK
 
     @testset "time ordered integral is just integral for length 1" begin
         for N in [20, 30, 40, 50, 60]
-            qt = sin_TT(1.0, N)
+            qt = sin_TT(N)
             val_tt = time_ordered_integral_TT([qt])
             val_quad = quadgk(t -> sin(t), 0.0, 1.0)[1]
             @test isapprox(val_tt, val_quad; rtol = 1.0e-5)
@@ -63,8 +63,8 @@ using QuadGK
     @testset "time ordered integral length 2" begin
         # 0 -> 1
         for N in [20, 30, 40, 50, 60]
-            qt1 = sin_TT(1.0, N)
-            qt2 = cos_TT(1.0, N)
+            qt1 = sin_TT(N)
+            qt2 = cos_TT(N)
             val_tt = time_ordered_integral_TT([qt1, qt2])
             val_quad = quadgk(t -> sin(t) * quadgk(s -> cos(s), 0.0, t)[1], 0.0, 1.0)[1]
             @test isapprox(val_tt, val_quad; rtol = 1.0e-5)
@@ -75,8 +75,8 @@ using QuadGK
             t0 = 0.1
             t1 = 0.9
             dt = t1 - t0
-            qt1 = dt * sin_TT(dt, N, x0 = -t0 / dt)
-            qt2 = dt * cos_TT(dt, N, x0 = -t0 / dt)
+            qt1 = dt * sin_TT(N, ω = dt, x0 = -t0 / dt)
+            qt2 = dt * cos_TT(N, ω = dt, x0 = -t0 / dt)
             val_tt = time_ordered_integral_TT([qt1, qt2])
             val_quad = quadgk(t -> sin(t) * quadgk(s -> cos(s), t0, t)[1], t0, t1)[1]
             @test isapprox(val_tt, val_quad; rtol = 1.0e-5)
