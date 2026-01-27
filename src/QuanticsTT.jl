@@ -95,7 +95,8 @@ function Base.:+(qt1::QuanticTT, qt2::QuanticTT)
     return QuanticTT([lefttensor, tensors..., righttensor])
 end
 
-Base.:+(qt::QuanticTT, a::Number) = deepcopy(qt) + constant_TT(a, length(qt))
+Base.:+(a::Number, qt::QuanticTT) = constant_TT(a, length(qt)) + deepcopy(qt)
+Base.:+(qt::QuanticTT, a::Number) = a + deepcopy(qt)
 
 function Base.:*(a::Number, qt::QuanticTT)
     # scale the quantics TT by a number
@@ -103,6 +104,7 @@ function Base.:*(a::Number, qt::QuanticTT)
     newqt[1] .= a * newqt[1]
     return newqt
 end
+Base.:*(qt::QuanticTT, a::Number) = a * qt
 
 Base.:-(qt1::QuanticTT, qt2::QuanticTT) = qt1 + (-1) * qt2
 
@@ -137,13 +139,13 @@ end
 
     Returns a new quantics TT representing the indefinite integral ∫₀ᵗ f(x) dx.
 """
-function integrate(qt::QuanticTT)
+function integrate(qt::QuanticTT{E}) where {E}
     # TODO: figure out normalisation
     # Make heaviside MPO
     # Check page 58-59 of December 25' - January 26' notebook for explanation
 
     # Merge virtual levels into a singular level
-    function merge_virtual_levels(T::Array)
+    function merge_virtual_levels(T::Array{E})
         # TODO: check if this is correct
         χl = size(T, 1) * size(T, 2)
         χr = size(T, 4) * size(T, 5)
@@ -186,16 +188,6 @@ function integrate(qt::QuanticTT)
 end
 
 """
-    time_ordered_part(qt1::QuanticTT, qt2::QuanticTT)
-
-    Returns a new quantics TT representing the time ordered part
-    qt1(t)*∫_{0}^t qt2(x) dx
-"""
-function time_ordered_part(qt1::QuanticTT, qt2::QuanticTT)
-    return qt1 * integrate(qt2)
-end
-
-"""
     time_ordered_integral_TT(vqt::Vector{QuanticTT})
 
     Returns a quantics TT representing the time ordered integral
@@ -207,7 +199,7 @@ function time_ordered_integral_TT(vqt::Vector)
     end
     f = last(vqt)
     for qt in reverse(vqt[2:(end - 1)])
-        f = time_ordered_part(qt, f)
+        f = qt * integrate(f)
     end
     return fxf(first(vqt), integrate(f))
 end
@@ -227,15 +219,5 @@ function fxf(qt1::QuanticTT, qt2::QuanticTT)
     end
 
     return only(start)
-end
-
-function to_TT(s::String, omega::Float64, a::Float64, b::Float64, N::Int)
-    if s == "sin"
-        return sin_TT((b - a) * omega, N; x0 = (-omega * a))
-    elseif s == "cos"
-        return cos_TT(a, (b - a) * omega, N; x0 = (-omega * a))
-    else
-        error("Function $s not recognized")
-    end
 end
 end
