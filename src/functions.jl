@@ -1,3 +1,4 @@
+# Trigonometric functions
 """
     sin_TT(N::Int; ω::Float64=1.0, x0::Float64 = 0.0)
     
@@ -47,6 +48,65 @@ function cos_TT(N::Int; ω::Float64 = 1.0, x0::Float64 = 0.0)
         A[2, 1, 2] = 1.0
         A[1, 2, 1] = exp(1im * ω * 2.0^(α - 1 - N))
         A[2, 2, 2] = exp(-1im * ω * 2.0^(α - 1 - N))
+        return A
+    end
+
+    # Absorb boundaries
+    @tensor tensors[1][-1 -2 -3] := vl[-1 1] * tensors[1][1 -2 -3]
+    @tensor tensors[end][-1 -2 -3] := tensors[end][-1 -2 1] * vr[1 -3]
+    return QuanticTT(tensors)
+end
+
+# Hyperbolic functions
+"""
+    sinh_TT(N::Int; ω::Float64=1.0, x0::Float64 = 0.0)
+
+    Generate an quantics TT representation of sinh(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
+"""
+function sinh_TT(N::Int; ω::Float64 = 1.0, x0::Float64 = 0.0)
+    # Left boundary: [1/(2) * exp[-ωx0], -1/(2) * exp[ωx0]]
+    vl = ones(Float64, 1, 2)
+    vl[1, 1] = (1 / 2) * exp(-ω * x0)
+    vl[1, 2] = (-1 / 2) * exp(ω * x0)
+
+    # Right boundary: [1, 1]ᵀ
+    vr = ones(Float64, 2, 1)
+
+    tensors = map(1:N) do α # loop over sites
+        A = zeros(Float64, 2, 2, 2) # left, physical, right
+        A[1, 1, 1] = 1.0 # nα = 0
+        A[2, 1, 2] = 1.0
+        A[1, 2, 1] = exp(ω * 2.0^(α - 1 - N))
+        A[2, 2, 2] = exp(-ω * 2.0^(α - 1 - N))
+        return A
+    end
+
+    # Absorb boundaries
+    @tensor tensors[1][-1 -2 -3] := vl[-1 1] * tensors[1][1 -2 -3]
+    @tensor tensors[end][-1 -2 -3] := tensors[end][-1 -2 1] * vr[1 -3]
+    return QuanticTT(tensors)
+end
+
+"""
+    cosh_TT(N::Int; ω::Float64=1.0, x0::Float64 = 0.0)
+
+    Generate an quantics TT representation of cosh(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
+"""
+function cosh_TT(N::Int; ω::Float64 = 1.0, x0::Float64 = 0.0)
+    # Left boundary: [1/2 * exp(-ωx0), 1/2 * exp(ωx0)]
+    vl = ones(Float64, 1, 2)
+    vl[1, 1] = (1 / 2) * exp(-ω * x0)
+    vl[1, 2] = (1 / 2) * exp(ω * x0)
+
+    # Right boundary: [1, 1]ᵀ
+    vr = ones(Float64, 2, 1)
+
+    tensors = map(1:N) do α # loop over sites
+        A = zeros(Float64, 2, 2, 2) # left, physical, right
+        A[1, 1, 1] = 1.0 # nα = 0
+        A[2, 1, 2] = 1.0
+        A[1, 2, 1] = exp(ω * 2.0^(α - 1 - N))
+        A[2, 2, 2] = exp(-ω * 2.0^(α - 1 - N))
         return A
     end
 

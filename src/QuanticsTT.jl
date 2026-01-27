@@ -2,7 +2,12 @@
 module QuanticsTT
 using TensorOperations
 include("functions.jl")
-export QuanticTT, integrate, time_ordered_integral_TT, sin_TT, cos_TT, constant_TT
+export QuanticTT, integrate, time_ordered_integral_TT
+
+# functions
+export sin_TT, cos_TT
+export constant_TT
+export sinh_TT, cosh_TT
 
 """
     Struct QuanticTT{E}

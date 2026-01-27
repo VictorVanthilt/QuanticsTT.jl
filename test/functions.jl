@@ -70,6 +70,43 @@ end
     @test abs(val_sin - val_cos) < tolerance
 end
 
+@testset "Hyperbolic function tests" begin
+    for (hyp_tt, hyp) in ((sinh_TT, sinh), (cosh_TT, cosh))
+        # Test 1: Verify at specific points: hyp(ω*x)
+        @testset "$(hyp) basic evaluation" begin
+            tt_func = hyp_tt(N; ω = ω)
+            for x in x_vals
+                val_tt = tt_func(x)
+                val_exact = hyp(ω * x)
+                @test abs(val_tt - val_exact) < tolerance
+            end
+        end
+
+        # Test 2: x0 offset
+        @testset "$(hyp) with x0 offset" begin
+            x0 = 0.1
+            tt_func = hyp_tt(N; ω = ω, x0 = x0)
+            for x in x_vals
+                val_tt = tt_func(x)
+                val_exact = hyp(ω * (x - x0))
+                @test abs(val_tt - val_exact) < tolerance
+            end
+        end
+
+        # Test 3: Different frequency
+        @testset "$(hyp) with different frequency" begin
+            ω_low = 0.2
+            tt_func = hyp_tt(N; ω = ω_low)
+
+            for x in x_vals
+                val_tt = tt_func(x)
+                val_exact = hyp(ω_low * x)
+                @test abs(val_tt - val_exact) < tolerance
+            end
+        end
+    end
+end
+
 # Up the tolerance
 tolerance = 1.0e-15
 
