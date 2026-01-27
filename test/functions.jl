@@ -57,18 +57,30 @@ tolerance = 1.0e-12
             end
         end
     end
+
+    @testset "sin cos relationship" begin
+        ω = 1 / 3 * π
+        tt_sin_phase = sin_TT(N; ω = ω, x0 = -π / (2ω))
+        tt_cos_direct = cos_TT(N; ω = ω)
+
+        x_test = 0.5
+        val_sin = tt_sin_phase(x_test)
+        val_cos = tt_cos_direct(x_test)
+        @test abs(val_sin - val_cos) < tolerance
+    end
+
+    @testset "Fundamental theorem of trigonometry" begin
+        ω = 2π
+        tt_sin = sin_TT(N; ω = ω)
+        tt_cos = cos_TT(N; ω = ω)
+        for x in x_vals
+            val_sin = tt_sin(x)
+            val_cos = tt_cos(x)
+            @test abs(val_sin^2 + val_cos^2 - 1.0) < tolerance
+        end
+    end
 end
 
-@testset "sin cos relationship" begin
-    ω = 1 / 3 * π
-    tt_sin_phase = sin_TT(N; ω = ω, x0 = -π / (2ω))
-    tt_cos_direct = cos_TT(N; ω = ω)
-
-    x_test = 0.5
-    val_sin = tt_sin_phase(x_test)
-    val_cos = tt_cos_direct(x_test)
-    @test abs(val_sin - val_cos) < tolerance
-end
 
 @testset "Hyperbolic function tests" begin
     for (hyp_tt, hyp) in ((sinh_TT, sinh), (cosh_TT, cosh))
