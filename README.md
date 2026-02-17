@@ -1,0 +1,38 @@
+# QuanticsTT.jl
+
+Small Julia module for building quantics tensor-train (TT) representations of simple functions on a $2^N$ grid over $[0, 1)$, and for computing integrals/time-ordered integrals in that representation.
+
+## Quick start
+
+```julia
+using QuanticsTT
+
+N = 40
+ω = 2π
+
+# Build quantics TT for sin(ω x)
+qt = sin_TT(ω, N)
+
+# Evaluate at a point
+x = 0.37
+val = qt(x)
+
+# Indefinite integral: t -> ∫_0^t sin(ω x) dx
+iqt = integrate(qt)
+val_int = iqt(x)
+
+# Time-ordered integral for two functions
+qt1 = sin_TT(ω, N)
+qt2 = cos_TT(ω, N)
+val_time_ordered = time_ordered_integral_TT([qt1, qt2])
+```
+
+## Functions
+
+- `sin_TT(N, ω; x0)`: $\sin(\omega (x - x0))$
+- `cos_TT(N, ω; x0)`: $\cos(\omega (x - x0))$
+- `constant_TT(a, N)`: constant function of amplitude a.
+
+## Functionality
+- `integrate(qt)`: return a TT for $t \mapsto \int_0^t f(x) dx$.
+- `time_ordered_integral_TT([a, b, c])`: $\int_0^tdt_1\int_0^{t_1}dt_2\int_0^{t_2} dt_3 \; a(t_1)b(t_2)c(t_3)$ 
