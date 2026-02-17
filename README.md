@@ -28,11 +28,14 @@ val_time_ordered = time_ordered_integral_TT([qt1, qt2])
 ```
 
 ## Functions
-
-- `sin_TT(N, ω; x0)`: $\sin(\omega (x - x0))$
-- `cos_TT(N, ω; x0)`: $\cos(\omega (x - x0))$
+- `exp_TT(N; ω, x0)`: $\exp(\omega (x - x0))$
+- `sin_TT(N; ω, x0)`: $\sin(\omega (x - x0))$
+- `cos_TT(N; ω, x0)`: $\cos(\omega (x - x0))$
+- `sinh_TT(N; ω, x0)`: $\sinh(\omega (x - x0))$
+- `cosh_TT(N; ω, x0)`: $\cosh(\omega (x - x0))$
 - `constant_TT(a, N)`: constant function of amplitude a.
 
 ## Functionality
+- scalar multiplication, addition, mutliplication
 - `integrate(qt)`: return a TT for $t \mapsto \int_0^t f(x) dx$.
 - `time_ordered_integral_TT([a, b, c])`: $\int_0^tdt_1\int_0^{t_1}dt_2\int_0^{t_2} dt_3 \; a(t_1)b(t_2)c(t_3)$ 

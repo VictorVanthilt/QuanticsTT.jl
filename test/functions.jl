@@ -7,6 +7,17 @@ N = 55
 x_vals = collect(0.01:0.001:0.999)
 tolerance = 1.0e-12
 
+@testset "Exponential function" begin
+    @testset "function evalution" begin
+        tt_exp = exp_TT(N; ω = ω)
+        for x in x_vals
+            val_tt = tt_exp(x)
+            val_exact = exp(ω * x)
+            @test abs(val_tt - val_exact) < tolerance
+        end
+    end
+end
+
 @testset "Trigonometric function tests" begin
 
     for (trig_tt, trig) in ((sin_TT, sin), (cos_TT, cos))

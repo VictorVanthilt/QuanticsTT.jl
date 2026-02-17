@@ -5,6 +5,7 @@ include("functions.jl")
 export QuanticTT, integrate, time_ordered_integral_TT
 
 # functions
+export exp_TT
 export sin_TT, cos_TT
 export constant_TT
 export sinh_TT, cosh_TT
