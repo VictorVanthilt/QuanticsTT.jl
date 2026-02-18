@@ -22,10 +22,6 @@ export sinh_TT, cosh_TT
 """
 struct QuanticTT{E}
     data::Vector{Array{E, 3}}
-    # offset::Float64
-    # TODO: add a constant field that keeps track of constant offsets
-    # a constant offset increases the rank by 1 so it is best to keep track of it separately
-    # Make sure that during integration this IS integrated a -> a * x
     function QuanticTT(data)
         return new{eltype(data[1])}(data)
     end
@@ -121,7 +117,6 @@ function Base.:*(qt1::QuanticTT, qt2::QuanticTT)
 
     # Merge virtual levels into a singular level
     function merge_virtual_levels(T::Array)
-        # TODO: check if this is correct
         χl = size(T, 1) * size(T, 2)
         χr = size(T, 4) * size(T, 5)
         return reshape(T, (χl, size(T, 3), χr))
@@ -141,13 +136,11 @@ end
     Returns a new quantics TT representing the indefinite integral ∫₀ᵗ f(x) dx.
 """
 function integrate(qt::QuanticTT{E}) where {E}
-    # TODO: figure out normalisation
     # Make heaviside MPO
     # Check page 58-59 of December 25' - January 26' notebook for explanation
 
     # Merge virtual levels into a singular level
     function merge_virtual_levels(T::Array{E})
-        # TODO: check if this is correct
         χl = size(T, 1) * size(T, 2)
         χr = size(T, 4) * size(T, 5)
         return reshape(T, (χl, size(T, 3), χr))
@@ -174,7 +167,6 @@ function integrate(qt::QuanticTT{E}) where {E}
     @tensor right[-1 -2 -3; -4 -5] := qt[end][-1 1; -4] * I[-2 -3; 1 2] * vr[2; -5]
     right_merged = merge_virtual_levels(right)
 
-    # TODO: multithread
     tensors = map(reverse(eachindex(qt)[2:(end - 1)])) do i
         merge_virtual_levels(@tensor cur[-1 -2 -3; -4 -5] := qt[i][-1 1; -4] * I[-2 -3; 1 -5])
     end
