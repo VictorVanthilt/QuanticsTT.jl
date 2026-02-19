@@ -38,4 +38,4 @@ val_time_ordered = time_ordered_integral_TT([qt1, qt2])
 ## Functionality
 - scalar multiplication, addition, mutliplication
 - `integrate(qt)`: return a TT for $t \mapsto \int_0^t f(x) dx$.
-- `time_ordered_integral_TT([a, b, c])`: $\int_0^tdt_1\int_0^{t_1}dt_2\int_0^{t_2} dt_3 \; a(t_1)b(t_2)c(t_3)$ 
+- `time_ordered_integral_TT([a, b, c])`: $\int_0^tdt_1\int_0^{t_1}dt_2\int_0^{t_2} dt_3 \ a(t_1)b(t_2)c(t_3)$ 
