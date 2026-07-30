@@ -2,7 +2,7 @@
 module QuanticsTT
 using TensorOperations
 include("functions.jl")
-export QuanticTT, integrate, time_ordered_integral_TT
+export QuanticTT, integrate, time_ordered_integral_TT, derivative
 
 # functions
 export exp_TT
@@ -212,5 +212,83 @@ function fxf(qt1::QuanticTT, qt2::QuanticTT)
     end
 
     return only(start)
+end
+
+"""
+    derivative(qt::QuanticTT)
+
+    Returns a new quantics TT representing the derivative df(x)/dx.
+    Input a is the translation between which you take the difference
+    Periodic determines wheter you allow that translation to pass back aroundto begin of domain
+"""
+function derivative(qt::QuanticTT{E}, a::Float64 = 1 / 2^(length(qt)); periodic::Bool = true) where {E}
+    # translation() below quantizes a to whole grid steps (floor(a * 2^N) / 2^N);
+    # quantize here too so the 1/(2a) normalization matches the shift actually applied
+    a = floor(a * 2^length(qt)) / 2^length(qt)
+
+    # Merge virtual levels into a singular level
+    function merge_virtual_levels(T::Array)
+        χl = size(T, 1) * size(T, 2)
+        χr = size(T, 4) * size(T, 5)
+        return reshape(T, (χl, size(T, 3), χr))
+    end
+
+    function translation(a::Float64)
+        # ripple carry adder algorithm https://arxiv.org/pdf/2507.03134 appendix A
+        # Make the translation MPO of a
+        #        li-1  bi  bi' = (a_i + b_i)mod2  li
+        # (left/right swapped vs. Eq. (A2) itself, to match this struct's
+        # LSB-first tensor order: data[1] = LSB ... data[end] = MSB)
+        T1 = zeros(Float64, 2, 2, 2, 2) # left, down, up, right
+        T2 = zeros(Float64, 2, 2, 2, 2) # left, down, up, right
+        T1[1, 1, 1, 1] = 1.0
+        T1[2, 1, 2, 1] = 1.0
+        T1[1, 2, 2, 1] = 1.0
+        T1[2, 2, 1, 2] = 1.0
+        T2[1, 1, 2, 1] = 1.0
+        T2[2, 1, 1, 2] = 1.0
+        T2[1, 2, 1, 2] = 1.0
+        T2[2, 2, 2, 2] = 1.0
+
+        @assert 0.0 ≤ a < 1.0 "x out of bounds for quantics representation"
+        integerx = floor(Int, a * 2^(length(qt)))
+        xstring = bitstring(integerx)[(end - length(qt) + 1):end] # "0110..."
+        xstring = [parse(Int, c) for c in xstring] .+ 1 # [1, 2, 2, 1, ...]
+        xstring = reverse(xstring)
+
+        TT = [xstring[i] == 1 ? T1 : T2 for i in 1:length(qt)]
+
+        # TT[1] (LSB): no incoming carry, cap the left leg
+        vr = zeros(Float64, 1, 2)
+        vr[1, 1] = 1.0
+        @tensor right[-1 -2 -3; -4] := vr[-1; 1] * TT[1][1 -2; -3 -4]
+        tensors = [right]
+        for i in 2:(length(qt) - 1)
+            push!(tensors, TT[i])
+        end
+        # TT[end] (MSB): outgoing carry wraps around (periodic) or is dropped (open), cap the right leg
+        vl = zeros(Float64, 2, 1)
+        vl[1, 1] = 1.0
+        vl[2, 1] = periodic ? 1.0 : 0.0
+        @tensor left[-1 -2 -3; -4] := TT[end][-1 -2; -3 1] * vl[1; -4]
+        push!(tensors, left)
+        return tensors
+    end
+
+    T_a = translation(a)
+    # periodic: shift by -a == shift by (1-a) wrapping around [0,1)
+    # open: build -a directly as the adjoint of +a (Appendix A: T_{-a} = (T_a)^†), which carries the open (non-wrapping) boundary along with it
+    T_min_a = periodic ? translation(1.0 - a) :
+        [conj(permutedims(T_a[i], (1, 3, 2, 4))) for i in 1:length(T_a)]
+
+    tensors_plus = map(eachindex(qt)) do i
+        merge_virtual_levels(@tensor cur[-1 -2 -3; -4 -5] := qt[i][-1 1; -4] * T_a[i][-2 -3; 1 -5])
+    end
+    tensors_minus = map(eachindex(qt)) do i
+        merge_virtual_levels(@tensor cur[-1 -2 -3; -4 -5] := qt[i][-1 1; -4] * T_min_a[i][-2 -3; 1 -5])
+    end
+
+
+    return (QuanticTT(tensors_plus) - QuanticTT(tensors_minus)) * (1 / (2 * a))
 end
 end
