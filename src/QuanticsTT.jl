@@ -176,7 +176,7 @@ function integrate(qt::QuanticTT{E}) where {E}
     vl[1, 1] = 1.0
     vl[1, 2] = 1.0
 
-    left_merged = merge_virtual_levels(@tensor left[-1 -2 -3; -4 -5] := vl[-2 1] * I[1 -3; 1 -5] * qt[1][-1 1; -4])
+    left_merged = merge_virtual_levels(@tensor left[-1 -2 -3; -4 -5] := vl[-2 1] * I[1 -3; 2 -5] * qt[1][-1 2; -4])
     return QuanticTT([left_merged, reverse(tensors)..., right_merged])
 end
 
