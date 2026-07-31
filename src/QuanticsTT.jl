@@ -218,8 +218,8 @@ end
     derivative(qt::QuanticTT)
 
     Returns a new quantics TT representing the derivative df(x)/dx.
-    Input a is the translation between which you take the difference
-    Periodic determines wheter you allow that translation to pass back aroundto begin of domain
+    Input a is the translation between which you take the difference.
+    Periodic determines wheter you allow that translation to pass back around to begin of domain
 """
 function derivative(qt::QuanticTT{E}, a::Float64 = 1 / 2^(length(qt)); periodic::Bool = true) where {E}
     # translation() below quantizes a to whole grid steps (floor(a * 2^N) / 2^N);
