@@ -221,7 +221,7 @@ end
     Input a is the translation between which you take the difference.
     Periodic determines wheter you allow that translation to pass back around to begin of domain
 """
-function derivative(qt::QuanticTT{E}, a::Float64 = 1 / 2^(length(qt)); periodic::Bool = true) where {E}
+function derivative(qt::QuanticTT{E}, a::Float64 = max(2.0^-length(qt), 1.0e-6); periodic::Bool = true) where {E}
     # translation() below quantizes a to whole grid steps (floor(a * 2^N) / 2^N);
     # quantize here too so the 1/(2a) normalization matches the shift actually applied
     a = floor(a * 2^length(qt)) / 2^length(qt)
