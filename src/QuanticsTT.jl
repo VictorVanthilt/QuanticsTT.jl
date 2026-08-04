@@ -46,22 +46,33 @@ function rank(q::QuanticTT)
 end
 
 """
-    (qt::QuanticTT)(x::Float64)
+    (qt::QuanticTT)(x::Real)
 
     Evaluate the quantics TT at x ∈ [0, 1[.
-    This muliplies x by 2^N, takes the floor to get an integer, converts that to a bitstring,
-    and uses that to contract the quantics TT.
+    The binary digits of x are extracted directly by repeated doubling (most significant
+    bit first), instead of going through a `2^N` integer / `bitstring`, which overflows
+    `Int` for N ≥ 63. This makes evaluation work for trains of arbitrary length N.
+    For N larger than the precision of x (≈ 52 bits for `Float64`) pass a higher-precision
+    argument, e.g. a `BigFloat`, so that x actually resolves a grid point.
 """
-function (qt::QuanticTT)(x::Float64)
-    @assert 0.0 ≤ x < 1.0 "x out of bounds for quantics representation"
-    integerx = floor(Int, x * 2^(length(qt)))
-    xstring = bitstring(integerx)[(end - length(qt) + 1):end] # "0110..."
-    xstring = [parse(Int, c) for c in xstring] .+ 1 # [1, 2, 2, 1, ...]
-    xstring = reverse(xstring) # little endian
+function (qt::QuanticTT)(x::Real)
+    @assert 0 ≤ x < 1 "x out of bounds for quantics representation"
+    N = length(qt)
 
-    a = [1.0]
-    for (pos, char) in enumerate(xstring)
-        cur = qt[pos][:, char, :] # impose physical index
+    # Peel off the binary digits of x. r stays in [0, 2), so `r *= 2` and the integer
+    # subtraction are exact in floating point: the recovered bits are exactly those in x.
+    physical = Vector{Int}(undef, N)
+    r = x
+    for α in 1:N                    # α = 1 is the 2^-1 place (most significant bit of x)
+        r *= 2
+        b = floor(Int, r)           # 0 or 1
+        r -= b
+        physical[N - α + 1] = b + 1 # data[1] is the least significant bit → little endian
+    end
+
+    a = [one(eltype(qt[1]))]
+    for pos in 1:N
+        cur = qt[pos][:, physical[pos], :] # impose physical index
         @tensor a[-1] := a[1] * cur[1, -1]
     end
     return only(a)
@@ -183,7 +194,10 @@ end
 """
     time_ordered_integral_TT(vqt::Vector{QuanticTT})
 
-    Returns a quantics TT representing the time ordered integral
+    Returns the scalar value of the nested time-ordered integral of the given
+    functions over [0, 1[, e.g. for [a, b, c]:
+        ∫₀¹ dt₁ ∫₀^{t₁} dt₂ ∫₀^{t₂} dt₃ a(t₁) b(t₂) c(t₃).
+    All QuanticTTs must have the same length.
 """
 function time_ordered_integral_TT(vqt::Vector)
     @assert allequal(length.(vqt)) "All QuanticTTs must have the same length"

@@ -11,7 +11,7 @@ N = 40
 ω = 2π
 
 # Build quantics TT for sin(ω x)
-qt = sin_TT(N, ω)
+qt = sin_TT(N; ω = ω)
 
 # Evaluate at a point
 x = 0.37
@@ -22,8 +22,8 @@ iqt = integrate(qt)
 val_int = iqt(x)
 
 # Time-ordered integral for two functions
-qt1 = sin_TT(N, ω)
-qt2 = cos_TT(N, ω)
+qt1 = sin_TT(N; ω = ω)
+qt2 = cos_TT(N; ω = ω)
 val_time_ordered = time_ordered_integral_TT([qt1, qt2])
 ```
 

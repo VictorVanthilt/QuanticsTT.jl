@@ -87,7 +87,10 @@ using QuadGK
         N = 20
         qtc = constant_TT(1.0, N)
         for l in 1:10
-            @test isapprox(time_ordered_integral_TT(fill(qtc, l)), 1 / factorial(l), atol = 1.0e-12)
+            # The left-Riemann quadrature gives an O(2^-N) discretization error: the
+            # discrete result is C(2^N, l) / 2^(N l) = (1/l!) ∏_{j}(1 - j/2^N), so the
+            # deviation from 1/l! is bounded by ~l^2 / 2^N (≈ 1e-5 at N = 20, l = 10).
+            @test isapprox(time_ordered_integral_TT(fill(qtc, l)), 1 / factorial(l), atol = l^2 / 2.0^N)
         end
     end
 end

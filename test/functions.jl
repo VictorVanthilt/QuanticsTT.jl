@@ -92,6 +92,35 @@ end
     end
 end
 
+@testset "Long QuanticTT evaluation (N ≥ 65)" begin
+    # The old Int64 / bitstring evaluation path overflowed for N ≥ 63. Direct bit
+    # extraction lifts that; N is now unbounded. For N beyond Float64 precision
+    # (≈ 52 bits) the input must carry enough bits, so use exact BigFloat grid points.
+    ω = 2π
+    for N in [65, 80, 100, 200]
+        tt_sin = sin_TT(N; ω = ω)
+        tt_cos = cos_TT(N; ω = ω)
+        tt_exp = exp_TT(N; ω = ω)
+        for frac in (0.1, 0.37, 0.5, 0.83, 0.999)
+            m = round(BigInt, frac * big(2)^N)   # nearest grid index
+            x = m // big(2)^N                     # exact N-bit grid point in [0, 1[
+            xf = Float64(x)
+            @test isapprox(tt_sin(x), sin(ω * xf); atol = 1.0e-11)
+            @test isapprox(tt_cos(x), cos(ω * xf); atol = 1.0e-11)
+            @test isapprox(tt_exp(x), exp(ω * xf); rtol = 1.0e-11)
+        end
+    end
+
+    @testset "constant_TT at long N" begin
+        for N in [65, 128, 256]
+            a = 3.5
+            tt = constant_TT(a, N)
+            x = big(1) // big(2)^N            # a genuine N-bit grid point
+            @test isapprox(tt(x), a; atol = 1.0e-13)
+        end
+    end
+end
+
 
 @testset "Hyperbolic function tests" begin
     for (hyp_tt, hyp) in ((sinh_TT, sinh), (cosh_TT, cosh))

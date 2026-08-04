@@ -1,8 +1,8 @@
 # Exponential function
 """
-    exp_TT(N::Int; ω::Float64=1.0, x0::Float64 = 0.0)
+    exp_TT(N::Int; ω::Number=1.0, x0::Float64 = 0.0)
 
-    Generate an quantics TT representation of exp(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
+    Generate a quantics TT representation of exp(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
 """
 function exp_TT(N::Int; ω::Number = 1.0, x0::Float64 = 0.0)
     # Left boundary: [exp(-ωx0)]
@@ -28,7 +28,7 @@ end
 """
     sin_TT(N::Int; ω::Float64=1.0, x0::Float64 = 0.0)
     
-    Generate an quantics TT representation of sin(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
+    Generate a quantics TT representation of sin(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
 """
 function sin_TT(N::Int; ω::Float64 = 1.0, x0::Float64 = 0.0)
     # Left boundary: [1/(2im) * exp[-iωx0], -1/(2im) * exp[iωx0]]
@@ -57,7 +57,7 @@ end
 """
     cos_TT(N::Int; ω::Float64=1.0, x0::Float64 = 0.0)
 
-    Generate an quantics TT representation of (a + ) cos(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
+    Generate a quantics TT representation of cos(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
 """
 function cos_TT(N::Int; ω::Float64 = 1.0, x0::Float64 = 0.0)
     # Left boundary: [1/2 * exp(-iωx0), 1/2 * exp(iωx0)]
@@ -87,7 +87,7 @@ end
 """
     sinh_TT(N::Int; ω::Float64=1.0, x0::Float64 = 0.0)
 
-    Generate an quantics TT representation of sinh(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
+    Generate a quantics TT representation of sinh(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
 """
 function sinh_TT(N::Int; ω::Float64 = 1.0, x0::Float64 = 0.0)
     # Left boundary: [1/(2) * exp[-ωx0], -1/(2) * exp[ωx0]]
@@ -116,7 +116,7 @@ end
 """
     cosh_TT(N::Int; ω::Float64=1.0, x0::Float64 = 0.0)
 
-    Generate an quantics TT representation of cosh(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
+    Generate a quantics TT representation of cosh(ω(x - x0)) over [0, 1[ on 2^N evenly spaced gridpoints.
 """
 function cosh_TT(N::Int; ω::Float64 = 1.0, x0::Float64 = 0.0)
     # Left boundary: [1/2 * exp(-ωx0), 1/2 * exp(ωx0)]
@@ -143,9 +143,9 @@ function cosh_TT(N::Int; ω::Float64 = 1.0, x0::Float64 = 0.0)
 end
 
 """
-    constant_TT(a::Float64, N::Int)
+    constant_TT(a::Number, N::Int)
 
-    Generate an quantics TT representation of the constant function f(t) = a over [0, 1[ on 2^N evenly spaced gridpoints.
+    Generate a quantics TT representation of the constant function f(t) = a over [0, 1[ on 2^N evenly spaced gridpoints.
 """
 function constant_TT(a::E, N::Int) where {E <: Number}
     tensors = [ones(E, 1, 2, 1) for _ in 1:N]
